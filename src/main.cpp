@@ -10,8 +10,8 @@ using HeavyPatch = Heavy_MidiToSine;
 // the same value hvcc's own wrappers use
 #define HV_HASH_NOTEIN 0x67E37CA3
 
-constexpr int PIN_BCLK    = 26;     // LRCLK is automatically BCLK + 1 (27)
-constexpr int PIN_DOUT    = 28;
+constexpr int PIN_BCLK    = 13;     // LRCLK is automatically BCLK + 1 (27)
+constexpr int PIN_DOUT    = 15;
 constexpr int SAMPLE_RATE = 48000;
 constexpr int BLOCK       = 32;     // frames per Heavy call (multiple of 4/8/16)
 constexpr int MAX_OUT     = 8;
@@ -42,12 +42,18 @@ void onNoteOff(byte channel, byte note, byte /*velocity*/) {
 }
 
 void setup() {
+  Serial.begin(115200);
   MIDI.begin(MIDI_CHANNEL_OMNI);
   MIDI.setHandleNoteOn(onNoteOn);    // note-on with velocity 0 is delivered
   MIDI.setHandleNoteOff(onNoteOff);  // as note-off by the library
 }
 
 void loop() {
+  static uint32_t lastReport = 0;
+  if (millis() - lastReport >= 2000) {
+    lastReport = millis();
+    Serial.printf("PSRAM used: %d bytes\n", rp2040.getUsedPSRAMHeap());
+  }
   MIDI.read();                       // fires the handlers above
 }
 
